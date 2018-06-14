@@ -1,0 +1,9 @@
+MYSQL_HOSTNAME="mysql"
+MYSQL_USERNAME="vpopmail"
+MYSQL_PASSWORD="supersecretpassword!"
+MYSQL_DATABASE="vpopmail"
+
+DOMAIN="my.domain.com"
+
+SSL_KEYFILE="/app/ssl/key.pem"
+SSL_CERTFILE="/app/ssl/cert.pem"
