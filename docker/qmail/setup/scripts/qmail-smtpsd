@@ -27,10 +27,16 @@
 #
 ###############################################################################
 
+export SMTPAUTH=""
+. /var/qmail/ssl/ssl.env
+
+# Get the variables
+source /app/setup/install/env
+
 exec 2>&1
 VQ="/var/qmail"
 PATH="$VQ/bin:/usr/local/bin:/usr/bin:/bin"
-QUSER=vpopmail
+QUSER="vpopmail"
 LOCAL=`head -1 $VQ/control/me`
 
 ###############################################################################
@@ -38,9 +44,10 @@ LOCAL=`head -1 $VQ/control/me`
 # options for tcpserver/sslserver
 
 IP=0
-PORT=25
-SSL=0
-SSL_CERT="/var/qmail/ssl/localhost.pem"
+PORT="smtps"
+SSL=1
+#SSL_CERT="/var/qmail/ssl/localhost.pem"
+SSL_CERT=${SSL_COMBINEDFILE}
 SMTP_CDB="/var/qmail/control/rules.smtpd.cdb"
 MAX=30
 

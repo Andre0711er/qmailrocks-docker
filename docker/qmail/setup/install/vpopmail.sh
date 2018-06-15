@@ -12,7 +12,7 @@ chown -R vpopmail:vchkpw /home/vpopmail
 chmod 770 /home/vpopmail
 cd /home/vpopmail/etc
 
-echo "$MYSQL_HOSTNAME|0|$MYSQL_USERNAME|$MYSQL_PASSWORD|$MYSQL_DATABASE" > ~vpopmail/etc/vpopmail.mysql
+echo "$MYSQL_HOSTNAME|0|$MYSQL_USER|$MYSQL_PASSWORD|$MYSQL_DATABASE" > ~vpopmail/etc/vpopmail.mysql
 chown vpopmail:vchkpw ~vpopmail/etc/vpopmail.mysql
 chmod 640 ~vpopmail/etc/vpopmail.mysql
 

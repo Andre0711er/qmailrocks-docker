@@ -1,0 +1,19 @@
+if ! [ "$MYSQL_HOSTNAME" ]; then
+  MYSQL_HOSTNAME="##MYSQL_HOSTNAME##"
+fi
+
+if ! [ "$MYSQL_USER" ]; then
+  MYSQL_USER="##MYSQL_USER##"
+fi
+
+if ! [ "$MYSQL_PASSWORD" ]; then
+  MYSQL_PASSWORD="##MYSQL_PASSWORD##"
+fi
+
+if ! [ "$MYSQL_DATABASE" ]; then
+  MYSQL_DATABASE="##MYSQL_DATABASE##"
+fi
+
+SSL_KEYFILE="/app/ssl/key.pem"
+SSL_CERTFILE="/app/ssl/cert.pem"
+SSL_COMBINEDFILE="/app/ssl/all.pem"

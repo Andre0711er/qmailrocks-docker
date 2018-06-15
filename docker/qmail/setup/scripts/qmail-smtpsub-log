@@ -1,0 +1,6 @@
+#!/bin/sh
+VQ="/var/qmail"
+
+exec env - PATH="$VQ/bin:/usr/local/bin:/usr/bin:/bin" \
+setuidgid qmaill multilog t n1024 s1048576 n20 /var/log/qmail-smtpsub
+#    '-*' '+*ver: status:*' =lstatus

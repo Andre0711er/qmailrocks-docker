@@ -2,24 +2,22 @@
 
 set -e
 
-mkdir -p /downloads
+mkdir -p /downloads/deb-packages
+mkdir -p /downloads/scripts
+
 mkdir /package
 chmod 1755 /package
 
-ln -s /etc/service /service
-
 /app/setup/install/users.sh
-#/app/setup/install/daemontools.sh
 /app/setup/install/ssl.sh
 /app/setup/install/ucspi-ssl.sh
 /app/setup/install/ucspi-tcp6.sh
 # /app/setup/install/qmail.sh
 /app/setup/install/sqmail.sh
 /app/setup/install/vpopmail.sh
-/app/setup/install/cleanup.sh
-/app/setup/install/qmail-configure.sh
 /app/setup/install/dovecot.sh
-#./spamassassin.sh
-#./courier.sh
-
-/app/setup/install/run.sh
+/app/setup/install/spamassassin.sh
+/app/setup/install/clamav.sh
+/app/setup/install/qmail-scanner.sh
+/app/setup/install/daemontools-configure.sh
+/app/setup/install/cleanup.sh

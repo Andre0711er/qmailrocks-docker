@@ -1,0 +1,4 @@
+#!/bin/sh
+
+PATH="/usr/bin:/bin"
+exec /usr/bin/freshclam -d --stdout 2>&1

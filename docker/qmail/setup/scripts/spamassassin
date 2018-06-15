@@ -1,0 +1,6 @@
+#!/bin/sh
+
+QUSER="vpopmail"
+
+PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+exec /usr/sbin/spamd --create-prefs --max-children 5 -u $QUSER -v -x -i -H --virtual-config-dir=/var/spool/spamassassin/%d/%l -c -s mail --pidfile=/var/run/spamd.pid 2>&1
