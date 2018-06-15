@@ -12,6 +12,7 @@ chmod 1755 /package
 /app/setup/install/ssl.sh
 /app/setup/install/ucspi-ssl.sh
 /app/setup/install/ucspi-tcp6.sh
+/app/setup/install/cdb.sh
 # /app/setup/install/qmail.sh
 /app/setup/install/sqmail.sh
 /app/setup/install/vpopmail.sh

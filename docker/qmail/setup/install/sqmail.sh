@@ -4,7 +4,7 @@ set -e
 
 ln -s /etc/service /service
 
-openssl dhparam -check -text -5 1024 -out /etc/ssl/dh1024.pem
+#openssl dhparam -check -text -5 1024 -out /etc/ssl/dh1024.pem
 
 SQMAIL_DOWNLOAD="https://www.fehcom.de/sqmail/sqmail-3.3.19.tgz"
 wget --no-check-certificate $SQMAIL_DOWNLOAD -O /downloads/sqmail-3.3.19.tgz

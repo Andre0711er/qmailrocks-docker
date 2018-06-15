@@ -16,9 +16,9 @@ echo "$MYSQL_HOSTNAME|0|$MYSQL_USER|$MYSQL_PASSWORD|$MYSQL_DATABASE" > ~vpopmail
 chown vpopmail:vchkpw ~vpopmail/etc/vpopmail.mysql
 chmod 640 ~vpopmail/etc/vpopmail.mysql
 
-cd /downloads
-tar xvzf vpopmail-5.4.33.tar.gz
-cd /downloads/vpopmail-5.4.33
+cd /usr/src
+tar xvzf /downloads/vpopmail-5.4.33.tar.gz
+cd vpopmail-5.4.33
 
 ./configure \
   --enable-qmaildir=/var/qmail/ \
@@ -26,7 +26,7 @@ cd /downloads/vpopmail-5.4.33
   --enable-qmail-inject=/var/qmail/bin/qmail-inject \
   --enable-qmail-newmrh=/var/qmail/bin/qmail-newmrh \
   --enable-tcprules-prog=/usr/bin/tcprules \
-  --enable-tcpserver-file=/etc/tcp.smtp \
+  --enable-tcpserver-file=/var/qmail/control/rules.smtpd.cdb \
   --enable-clear-passwd \
   --enable-many-domains \
   --enable-valias \
@@ -48,3 +48,6 @@ echo "Server:" > /home/vpopmail/etc/vusagec.conf
 echo "  Disable = True;" >> /home/vpopmail/etc/vusagec.conf
 echo 'export PATH=$PATH:/var/qmail/bin/:/home/vpopmail/bin/' > /etc/profile.d/extrapath.sh
 chmod +x /etc/profile.d/extrapath.sh
+
+chmod u+s /home/vpopmail/bin/vchkpw
+chmod go+x /home/vpopmail/bin/vchkpw

@@ -8,7 +8,19 @@ source /app/setup/install/env
 wget http://qmailrocks.thibs.com/downloads/scripts/qmailctl -O /downloads/scripts/qmailctl
 cp /downloads/scripts/qmailctl /var/qmail/bin/qmailctl
 chmod 755 /var/qmail/bin/qmailctl
+
+wget https://qmail.jms1.net/scripts/mkvalidrcptto -O /downloads/scripts/mkvalidrcptto
+cp /downloads/scripts/mkvalidrcptto /usr/local/bin/mkvalidrcptto
+chmod 755 /usr/local/bin/mkvalidrcptto
+
+sed -i 's/qmail-smtpdssl/qmail-smtpsd/g' /var/qmail/bin/qmailctl
+sed -i 's/\/etc\/tcp.smtp.cdb/\/var\/qmail\/control\/rules.smtpd.cdb/g' /var/qmail/bin/qmailctl
+sed -i 's/\/etc\/tcp.smtp.tmp/\/var\/qmail\/control\/rules.smtpd.tmp/g' /var/qmail/bin/qmailctl
+sed -i 's/\/etc\/tcp.smtp/\/var\/qmail\/control\/rules.smtpd.txt/' /var/qmail/bin/qmailctl
 ln -s /var/qmail/bin/qmailctl /usr/bin
+
+sed -i '/:deny/d' /var/qmail/control/rules.smtpd.txt
+echo ':allow,GREETDELAY="0",RBLSMTPD="",QMAILQUEUE="/var/qmail/bin/qmail-scanner-queue.pl"' >> /var/qmail/control/rules.smtpd.txt
 
 echo ./Maildir > /var/qmail/control/defaultdelivery
 echo 255 > /var/qmail/control/concurrencyremote
@@ -23,7 +35,7 @@ cd /var/qmail/control
 chmod 644 bouncefrom doublebouncehost doublebounceto concurrencyremote concurrencyincoming spfbehavior tlsserverciphers
 echo '8000000' > /var/qmail/control/databytes
 echo 30 > /var/qmail/control/timeoutsmtpd
-echo '127.:allow,RELAYCLIENT=""' >> /etc/tcp.smtp
+#echo '127.:allow,RELAYCLIENT=""' >> /etc/tcp.smtp
 qmailctl cdb
 
 #wget http://qmailrocks.thibs.com/downloads/scripts/rc -O /downloads/scripts/rc

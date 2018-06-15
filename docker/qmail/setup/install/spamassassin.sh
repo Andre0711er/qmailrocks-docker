@@ -25,4 +25,8 @@ echo 1 > /var/qmail/control/mfcheck
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/spamassassin
 sed -i 's/OPTIONS=/#OPTIONS=/g' /etc/default/spamassassin
 echo 'OPTIONS="--create-prefs --max-children 5 -u vpopmail -v -x -i -H --virtual-config-dir=/var/spool/spamassassin/%d/%l -c -s mail"' >> /etc/default/spamassassin
-#service spamassassin restart
+
+mkdir /etc/spamassassin/sa-update-keys
+chown vpopmail /etc/spamassassin/sa-update-keys
+chmod 700 /etc/spamassassin/sa-update-keys
+chown -R vpopmail /var/lib/spamassassin

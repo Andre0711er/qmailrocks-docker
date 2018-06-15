@@ -5,11 +5,11 @@ ENV DEBIAN_FRONTEND noninteractive
 # update debian and install dependencies
 RUN apt-get update && \
   apt-get -y upgrade && \
-  apt-get -y install csh build-essential supervisor logrotate locales ucspi-tcp wget groff-base git-core nginx fcgiwrap libbg1-dev ssl-cert libssl1.0-dev libmariadbclient-dev libmariadbclient-dev-compat \
-  procps man makepasswd spamassassin spamc pyzor razor clamav clamav-freshclam clamav-daemon arj unrar-free lhasa unzip bzip2 tar daemontools daemontools-run dovecot-core dovecot-mysql dovecot-imapd maildrop \
-  rblcheck dnsutils
+  apt-get -y install csh cron build-essential supervisor logrotate locales ucspi-tcp wget groff-base git-core nginx fcgiwrap libbg1-dev ssl-cert libssl1.0-dev libmariadbclient-dev \
+  libmariadbclient-dev-compat procps man makepasswd spamassassin spamc pyzor razor clamav clamav-freshclam clamav-daemon arj unrar-free lhasa unzip bzip2 tar daemontools daemontools-run \
+  dovecot-core dovecot-mysql dovecot-imapd maildrop rblcheck dnsutils
 
-RUN apt-get -y install spf-tools-perl libmailtools-perl libnet-cidr-lite-perl libnet-daemon-perl libtest-distribution-perl libmail-spf-perl libperl-dev libfile-find-rule-perl
+RUN apt-get -y install spf-tools-perl libmailtools-perl libnet-cidr-lite-perl libnet-daemon-perl libtest-distribution-perl libmail-spf-perl libperl-dev libfile-find-rule-perl libcdb-file-perl
 
 #RUN ln -s /etc/service /service
 

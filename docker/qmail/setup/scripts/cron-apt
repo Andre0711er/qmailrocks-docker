@@ -1,0 +1,138 @@
+#!/bin/bash
+#
+# cron.qmail
+# jms1 2001-05-08
+#
+# rebuilds control files and restarts qmail as needed
+#
+# 2006-01-13 jms1 - added better comments, simplified the logic in the
+#   validrcptto.cdb stuff a little.
+#
+# 2006-02-15 jms1 - changed copyright notice from "GPL v2 or later" to
+#   "GPL v2 only"
+#
+###############################################################################
+#
+# Copyright (C) 2003-2006 John Simpson.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# or visit http://www.gnu.org/licenses/gpl.txt
+#
+###############################################################################
+
+PATH=/usr/local/bin:/bin:/usr/bin:/var/qmail/bin
+
+###############################################################################
+#
+# check whether or not to rebuild individual files
+
+cd /var/qmail/users
+if [ -f assign ]
+then
+	if [ assign -nt cdb ]
+	then
+		echo running qmail-newu
+		logger -t cron.qmail running qmail-newu
+		/var/qmail/bin/qmail-newu
+	fi
+else
+	if [ -f cdb ]
+	then
+		echo deleting cdb, assign does not exist
+		logger -t cron.qmail deleting cdb, assign does not exist
+		rm cdb
+	fi
+fi
+
+cd /var/qmail/control
+if [ -f morercpthosts ]
+then
+	if [ ! -f morercpthosts.cdb ] \
+		|| [ morercpthosts -nt morercpthosts.cdb ]
+	then
+		echo running qmail-newmrh
+		logger -t cron.qmail running qmail-newmrh
+		/var/qmail/bin/qmail-newmrh
+	fi
+fi
+
+###############################################################################
+#
+# keep validrcptto.cdb up to date
+# only runs if validrcptto.cdb or validrcptto.txt exists
+
+if [ -f validrcptto.cdb -o -f validrcptto.txt ]
+then
+	umask 022
+
+	if [ ! -f validrcptto.txt ] ; then touch validrcptto.txt ; fi
+
+	mkvalidrcptto > validrcptto.new
+
+# if you don't want to see what changed
+#	if ! diff validrcptto.txt validrcptto.new > /dev/null 2>&1
+#
+# i prefer to see the changes myself
+	if ! diff validrcptto.txt validrcptto.new
+	then
+		echo Building new validrcptto.cdb
+		logger -t cron.qmail building new validrcptto.cdb
+		cdbmake-12 validrcptto.cdb validrcptto.tmp < validrcptto.new
+		chmod 644 validrcptto.cdb validrcptto.new
+
+		# if you are sending the data to other machines,
+		# add the appropriate commands here. the file
+		# "validrcptto.new" contains the now-current list
+		# of email addresses.
+	fi
+
+	mv -f validrcptto.new validrcptto.txt
+fi
+
+###############################################################################
+#
+# certain files, if changed, mean that we need to send a HUP signal to
+# qmail-send so it restarts
+
+RESTART=no
+
+if [ -f virtualdomains ]
+then
+	if [ ! -f virtualdomains.last ] \
+		|| [ virtualdomains -nt virtualdomains.last ]
+	then
+		echo virtualdomains has changed
+		logger -t cron.qmail virtualdomains has changed
+		touch virtualdomains.last
+		RESTART=yes
+	fi
+fi
+
+if [ -f locals ]
+then
+	if [ ! -f locals.last ] \
+		|| [ locals -nt locals.last ]
+	then
+		echo locals has changed
+		logger -t cron.qmail locals has changed
+		touch locals.last
+		RESTART=yes
+	fi
+fi
+
+if [ "$RESTART" == "yes" ]
+then
+	echo Restarting qmail-send
+	killall -HUP qmail-send
+fi

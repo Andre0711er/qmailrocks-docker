@@ -27,20 +27,32 @@
 #
 ###############################################################################
 
-export SMTPAUTH="!"
-export UCSPITLS=""
-. /var/qmail/ssl/ssl.env
-
-export CADIR="/etc/ssl/certs"
-export CERTFILE="/var/qmail/ssl/all.pem"
-
-# Get the variables
-source /app/setup/install/env
-
 exec 2>&1
+
+export SMTPAUTH="!+cram"
+export UCSPITLS=""
+
+# Environment
+SSL_USER=sqmtls
+SSL_GROUP=nofiles
+SSL_DIR="/var/qmail/ssl"
+SSL_CHROOT="$SSL_DIR"
+# Checks
+SSL_UID=`id -u $SSL_USER`
+[ $? -ne 0 ] && ( echo "No such user '$SSL_USER'" ; exit )
+SSL_GID=`id -g $SSL_USER`
+[ $? -ne 0 ] && ( echo "No such group '$SSL_GROUP'" ; exit )
+# Files
+CERTFILE="$SSL_DIR/localhost.pem"
+KEYFILE="$SSL_DIR/localhost.key"
+DHFILE="$SSL_DIR/dh1024.pem"
+# Exported
+export SSL_UID SSL_GID SSL_CHROOT
+export CERTFILE KEYFILE DHFILE
+
 VQ="/var/qmail"
 PATH="$VQ/bin:/usr/local/bin:/usr/bin:/bin"
-QUSER="vpopmail"
+QUSER=vpopmail
 LOCAL=`head -1 $VQ/control/me`
 
 ###############################################################################
@@ -50,8 +62,7 @@ LOCAL=`head -1 $VQ/control/me`
 IP=0
 PORT="submission"
 SSL=1
-#SSL_CERT="/var/qmail/ssl/localhost.pem"
-SSL_CERT=${SSL_COMBINEDFILE}
+#SSL_CERT="/var/qmail/ssl/all.pem"
 SMTP_CDB="/var/qmail/control/rules.smtpd.cdb"
 MAX=30
 
@@ -99,7 +110,7 @@ RECORDIO="`which recordio`"
 #
 # options for qmail-smtpd itself
 
-SMTPD="qmail-smtpd"
+SMTPD="/var/qmail/bin/qmail-smtpd"
 #SMTPGREETING="$LOCAL NO UCE"
 #GREETDELAY=30
 GREETDELAY=0
@@ -200,117 +211,102 @@ QMAILQUEUE="$VQ/bin/qmail-scanner-queue.pl"
 QDUID=`id -u $QUSER`
 QDGID=`id -g $QUSER`
 
-if [ -z "$IP" -o "$IP" = "unset" ]
-then
-        echo "The IP variable is not set in the run script. Cannot start."
-        sleep 5
-        exit 1
+if [ -z "$IP" -o "$IP" = "unset" ]; then
+  echo "The IP variable is not set in the run script. Cannot start."
+  sleep 5
+  exit 1
 fi
 
-if [ -z "$QDUID" -o -z "$QDGID" -o -z "$MAX" -o -z "$LOCAL" \
-        -o -z "$SSL" -o -z "$AUTH" ]
-then
-        echo "One of the variables QDUID, QDGID, MAX, LOCAL, SSL, or AUTH"
-        echo "is not set in the run script. Cannot start."
-        sleep 5
-        exit 1
+if [ -z "$QDUID" -o -z "$QDGID" -o -z "$MAX" -o -z "$LOCAL" -o -z "$SSL" -o -z "$AUTH" ]; then
+  echo "One of the variables QDUID, QDGID, MAX, LOCAL, SSL, or AUTH"
+  echo "is not set in the run script. Cannot start."
+  sleep 5
+  exit 1
 fi
 
-if [ ! -f $VQ/control/rcpthosts ]
-then
-        echo Creating emtpy $VQ/control/rcpthosts file to prevent open relay.
-        touch $VQ/control/rcpthosts
-        chmod 644 $VQ/control/rcpthosts
+if [ ! -f $VQ/control/rcpthosts ]; then
+  echo Creating emtpy $VQ/control/rcpthosts file to prevent open relay.
+  touch $VQ/control/rcpthosts
+  chmod 644 $VQ/control/rcpthosts
 fi
 
-if [ "$SSL" = "1" ]
-then
-        if ! which sslserver > /dev/null 2>&1
-        then
-                echo ERROR: sslserver not found in PATH [$PATH]
-                exit 1
-        fi
+SCMD="sslserver"
 
-        if [ ! -f $SSL_CERT ]
-        then
-                echo ERROR: $SSL_CERT does not exist
-                exit 1
-        fi
+if [ "$SSL" = "1" ]; then
+  if ! hash sslserver 2>/dev/null; then
+    echo "ERROR: sslserver not found in PATH [$PATH]"
+    exit 1
+  fi
 
-        export CERTFILE=${SSL_CERT}
-        export KEYFILE=""
-        export DHFILE=""
+  if [ ! -f $CERTFILE ]; then
+    echo "ERROR: $CERTFILE does not exist"
+    exit 1
+  fi
 
-        SCMD="sslserver -e"
+  if [ ! -f $KEYFILE ]; then
+    echo "ERROR: $KEYFILE does not exist"
+    exit 1
+  fi
+
+  if [ ! -f $DHFILE ]; then
+    echo "ERROR: $DHFILE does not exist"
+    exit 1
+  fi
+fi
+
+if [ "$IP" = "127.0.0.1" ]; then
+  export RELAYCLIENT=""
+  RBLSMTPD_PROG=""
+  ACMD=""
+elif [ -z "${SMTP_CDB:-}" ]; then
+  ACMD=""
 else
-        if [ -n "$SSL_CERT" ]
-        then
-                export TLS_SERVER_CERT=${SSL_CERT}
-        fi
+  if [ ! -f "$SMTP_CDB" ]; then
+    echo "ERROR: $SMTP_CDB does not exist"
+    exit 1
+  fi
 
-        SCMD="tcpserver"
+  ACMD="-x $SMTP_CDB"
 fi
 
-if [ "$IP" = "127.0.0.1" ]
-then
-        export RELAYCLIENT=""
-        RBLSMTPD_PROG=""
-        ACMD=""
-elif [ -z "${SMTP_CDB:-}" ]
-then
-        ACMD=""
+if [ "$AUTH" = "1" ]; then
+  if [ -n "$AUTH_CDB" ]; then
+    if [ ! -f $AUTH_CDB ]; then
+      echo "ERROR: AUTH_CDB file [$AUTH_CDB] does not exist"
+      exit 1
+    fi
+
+    export AUTH_CDB
+    ARGS=""
+  elif [ -n "$CHECKPW" ]; then
+    if [ ! -f $CHECKPW ]
+    then
+      echo "ERROR: $CHECKPW [$CHECKPW] program does not exist"
+      exit 1
+    fi
+
+    if [ -z "$LOCAL" ]
+    then
+      echo "ERROR: LOCAL is not set in the run script"
+      exit 1
+  elif [ -z "$TRUE" ]
+    then
+      echo "ERROR: TRUE is not set in the run script"
+      exit 1
+  elif [ ! -e $TRUE ]
+    then
+      echo "ERROR: $TRUE [$TRUE] is not an executable"
+      exit 1
+    fi
+
+    ARGS="$CHECKPW $TRUE"
+  else
+    echo "ERROR: AUTH=1 but no AUTH_CDB or CHECKPW"
+    exit 1
+  fi
 else
-        if [ ! -f "$SMTP_CDB" ]
-        then
-                echo ERROR: $SMTP_CDB does not exist
-                exit 1
-        fi
-
-        ACMD="-x $SMTP_CDB"
-fi
-
-if [ "$AUTH" = "1" ]
-then
-        if [ -n "$AUTH_CDB" ]
-        then
-                if [ ! -f $AUTH_CDB ]
-                then
-                        echo ERROR: AUTH_CDB file [$AUTH_CDB] does not exist
-                        exit 1
-                fi
-
-                export AUTH_CDB
-                ARGS=""
-        elif [ -n "$CHECKPW" ]
-        then
-                if [ ! -f $CHECKPW ]
-                then
-                        echo ERROR: $CHECKPW [$CHECKPW] program does not exist
-                        exit 1
-                fi
-
-                if [ -z "$LOCAL" ]
-                then
-                        echo ERROR: LOCAL is not set in the run script
-                        exit 1
-                elif [ -z "$TRUE" ]
-                then
-                        echo ERROR: TRUE is not set in the run script
-                        exit 1
-                elif [ ! -e $TRUE ]
-                then
-                        echo ERROR: $TRUE [$TRUE] is not an executable
-                        exit 1
-                fi
-
-                ARGS=" $LOCAL $CHECKPW $TRUE"
-        else
-                echo ERROR: AUTH=1 but no AUTH_CDB or CHECKPW
-                exit 1
-        fi
-else
-        ARGS=""
-        AUTH_CDB=""
+  ARGS=""
+  AUTH_CDB=""
 fi
 
 ########################################
@@ -320,26 +316,26 @@ RBLCMD=""
 
 if [ -n "$RBLSMTPD_PROG" ]
 then
-        if [ -n "$RBL_GOOD" ]
-        then
-                for name in $RBL_GOOD
-                do
-                        RBLCMD="$RBLCMD -a $name"
-                done
-        fi
+  if [ -n "$RBL_GOOD" ]
+  then
+    for name in $RBL_GOOD
+    do
+      RBLCMD="$RBLCMD -a $name"
+    done
+  fi
 
-        if [ -n "$RBL_BAD" ]
-        then
-                for name in $RBL_BAD
-                do
-                        RBLCMD="$RBLCMD -r $name"
-                done
-        fi
+  if [ -n "$RBL_BAD" ]
+  then
+    for name in $RBL_BAD
+    do
+      RBLCMD="$RBLCMD -r $name"
+    done
+  fi
 
-        if [ -n "$RBLCMD" ]
-        then
-                RBLCMD="$RBLSMTPD_PROG -t0 $RBLCMD"
-        fi
+  if [ -n "$RBLCMD" ]
+  then
+    RBLCMD="$RBLSMTPD_PROG -t0 $RBLCMD"
+  fi
 fi
 
 ########################################
@@ -347,20 +343,20 @@ fi
 
 if [ "$DOMAINKEYS" = "1" ]
 then
-        if [ -f "$VQ/bin/qmail-dk" ]
-        then
-                if [ -n "$QMAILQUEUE" ]
-                then
-                        export DKQUEUE="$QMAILQUEUE"
-                fi
-                export AUTH_UNSET_DKVERIFY=1
-                export QMAILQUEUE="$VQ/bin/qmail-dk"
+  if [ -f "$VQ/bin/qmail-dk" ]
+  then
+    if [ -n "$QMAILQUEUE" ]
+    then
+      export DKQUEUE="$QMAILQUEUE"
+    fi
+    export AUTH_UNSET_DKVERIFY=1
+    export QMAILQUEUE="$VQ/bin/qmail-dk"
 
-                if [ -n "$DKVERIFY" ] ; then export DKVERIFY ; fi
-                if [ -n "$DKSIGN"   ] ; then export DKSIGN   ; fi
-        else
-                echo ERROR: $VQ/bin/qmail-dk not found, cannot use domainkeys
-        fi
+    if [ -n "$DKVERIFY" ] ; then export DKVERIFY ; fi
+    if [ -n "$DKSIGN"   ] ; then export DKSIGN   ; fi
+  else
+    echo ERROR: $VQ/bin/qmail-dk not found, cannot use domainkeys
+  fi
 fi
 
 ########################################
@@ -369,78 +365,78 @@ fi
 
 if [ -z "$RECORDIO" ]
 then
-        RECORDIO=""
+  RECORDIO=""
 fi
 
 if [ -z "$GREYLIST" ]
 then
-        GREYLIST=""
+  GREYLIST=""
 fi
 
 ########################################
 # do the deed
 
 for n in SSL                                    \
-        MAXLOAD                                 \
-        MAXCONNIP                               \
-        MAXCONNC                                \
-        DIEMSG                                  \
-        DIEMSG_MAXLOAD                          \
-        DIEMSG_MAXCONNIP                        \
-        DIEMSG_MAXCONNC                         \
-        JGREYLIST_DIR                           \
-        JGREYLIST_NOREV                         \
-        JGREYLIST_BY_IP                         \
-        JGREYLIST_HOLDTIME                      \
-        JGREYLIST_LOG                           \
-        JGREYLIST_LOG_PID                       \
-        JGREYLIST_LOG_SMTP                      \
-        JGREYLIST_TIMEOUT                       \
-        JGREYLIST_LIMIT                         \
-        SMTPGREETING                            \
-        GREETDELAY                              \
-        DROP_PRE_GREET                          \
-        FORCE_TLS                               \
-        DENY_TLS                                \
-        MFCHECK                                 \
-        MAXRCPT                                 \
-        RELAYREJ                                \
-        QMAILSMTPD_LOG_MAIL                     \
-        QMAILSMTPD_LOG_RCPT                     \
-        QMAILSMTPD_HELP_VERSION                 \
-        REQUIRE_AUTH                            \
-        ALLOW_INSECURE_AUTH                     \
-        AUTH_CDB                                \
-        AUTH_SET_MFCHECK                        \
-        AUTH_SET_MAXRCPT                        \
-        AUTH_SET_DATABYTES                      \
-        AUTH_SET_SPFBEHAVIOR                    \
-        AUTH_SET_VALIDRCPTTO_LIMIT              \
-        AUTH_SET_VALIDRCPTTO_LOG                \
-        AUTH_SET_SPF_LOG                        \
-        AUTH_SET_RELAYREJ                       \
-        AUTH_SET_VALIDRCPTTO_CDB                \
-        AUTH_SET_QMAILSMTPD_LOG_MAIL            \
-        AUTH_SET_QMAILSMTPD_LOG_RCPT            \
-        AUTH_SET_QMAILSMTPD_HELP_VERSION        \
-        VALIDRCPTTO_CDB                         \
-        VALIDRCPTTO_LIMIT                       \
-        VALIDRCPTTO_LOG                         \
-        SPFBEHAVIOR                             \
-        SPF_LOG                                 \
-        SPF_BLOCK_PLUS_ALL                      \
-        DKVERIFY                                \
-        AUTH_SET_DKSIGN                         \
-        QMAILQUEUE                              \
-        NOP0FCHECK                              \
-        SIMSCAN_DEBUG                           \
-        SIMSCAN_DEBUG_FILES
+  MAXLOAD                                 \
+  MAXCONNIP                               \
+  MAXCONNC                                \
+  DIEMSG                                  \
+  DIEMSG_MAXLOAD                          \
+  DIEMSG_MAXCONNIP                        \
+  DIEMSG_MAXCONNC                         \
+  JGREYLIST_DIR                           \
+  JGREYLIST_NOREV                         \
+  JGREYLIST_BY_IP                         \
+  JGREYLIST_HOLDTIME                      \
+  JGREYLIST_LOG                           \
+  JGREYLIST_LOG_PID                       \
+  JGREYLIST_LOG_SMTP                      \
+  JGREYLIST_TIMEOUT                       \
+  JGREYLIST_LIMIT                         \
+  SMTPGREETING                            \
+  GREETDELAY                              \
+  DROP_PRE_GREET                          \
+  FORCE_TLS                               \
+  DENY_TLS                                \
+  MFCHECK                                 \
+  MAXRCPT                                 \
+  RELAYREJ                                \
+  QMAILSMTPD_LOG_MAIL                     \
+  QMAILSMTPD_LOG_RCPT                     \
+  QMAILSMTPD_HELP_VERSION                 \
+  REQUIRE_AUTH                            \
+  ALLOW_INSECURE_AUTH                     \
+  AUTH_CDB                                \
+  AUTH_SET_MFCHECK                        \
+  AUTH_SET_MAXRCPT                        \
+  AUTH_SET_DATABYTES                      \
+  AUTH_SET_SPFBEHAVIOR                    \
+  AUTH_SET_VALIDRCPTTO_LIMIT              \
+  AUTH_SET_VALIDRCPTTO_LOG                \
+  AUTH_SET_SPF_LOG                        \
+  AUTH_SET_RELAYREJ                       \
+  AUTH_SET_VALIDRCPTTO_CDB                \
+  AUTH_SET_QMAILSMTPD_LOG_MAIL            \
+  AUTH_SET_QMAILSMTPD_LOG_RCPT            \
+  AUTH_SET_QMAILSMTPD_HELP_VERSION        \
+  VALIDRCPTTO_CDB                         \
+  VALIDRCPTTO_LIMIT                       \
+  VALIDRCPTTO_LOG                         \
+  SPFBEHAVIOR                             \
+  SPF_LOG                                 \
+  SPF_BLOCK_PLUS_ALL                      \
+  DKVERIFY                                \
+  AUTH_SET_DKSIGN                         \
+  QMAILQUEUE                              \
+  NOP0FCHECK                              \
+  SIMSCAN_DEBUG                           \
+  SIMSCAN_DEBUG_FILES
 do
-        # note: not 100% sure "eval" works under old-school /bin/sh
-        eval "if [ -n \"\$$n\" ];then echo \"$n=\\\"\$$n\\\"\";export $n;fi"
+  # note: not 100% sure "eval" works under old-school /bin/sh
+  eval "if [ -n \"\$$n\" ];then echo \"$n=\\\"\$$n\\\"\";export $n;fi"
 done
 
-CMD="$SCMD -vR -l $LOCAL -c $MAX -u $QDUID -g $QDGID $ACMD $IP $PORT"
+CMD="$SCMD -seVn -Rp -l $LOCAL -c $MAX -u $QDUID -g $QDGID $ACMD $IP $PORT"
 CMD="$CMD $RBLCMD $GREYLIST $RECORDIO $SMTPD $ARGS"
 
 echo "command-line: exec $CMD 2>&1"

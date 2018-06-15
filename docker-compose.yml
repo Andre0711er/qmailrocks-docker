@@ -26,6 +26,10 @@ services:
       - "465:465"
       - "143:143"
       - "933:993"
+    volumes:
+      - ./resources/qmail/vpopmail:/home/vpopmail/domains
+      # - ./resources/qmail/control:/var/qmail/control
+      - ./resources/qmail/users:/var/qmail/users
     # volumes:
     #   - ./setup:/app/setup
     #   - ./setup/install:/app/setup/install
