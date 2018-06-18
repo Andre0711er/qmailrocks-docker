@@ -2,6 +2,11 @@
 
 set -e
 
+if [ -d /var/qmail/control ]; then
+  cp -pn /var/qmail/control.tmp/* /var/qmail/control/
+#  rm -fr /var/qmail/control.tmp
+fi
+
 sed -i "s/##MYSQL_HOSTNAME##/${MYSQL_HOSTNAME}/" ~vpopmail/etc/vpopmail.mysql
 sed -i "s/##MYSQL_HOSTNAME##/${MYSQL_HOSTNAME}/"  /etc/dovecot/dovecot-sql.conf.ext
 

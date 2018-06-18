@@ -17,10 +17,11 @@ sed -i 's/qmail-smtpdssl/qmail-smtpsd/g' /var/qmail/bin/qmailctl
 sed -i 's/\/etc\/tcp.smtp.cdb/\/var\/qmail\/control\/rules.smtpd.cdb/g' /var/qmail/bin/qmailctl
 sed -i 's/\/etc\/tcp.smtp.tmp/\/var\/qmail\/control\/rules.smtpd.tmp/g' /var/qmail/bin/qmailctl
 sed -i 's/\/etc\/tcp.smtp/\/var\/qmail\/control\/rules.smtpd.txt/' /var/qmail/bin/qmailctl
+sed -i 's/tcprules/\/usr\/local\/bin\/tcprules/g' /var/qmail/bin/qmailctl
 ln -s /var/qmail/bin/qmailctl /usr/bin
 
-sed -i '/:deny/d' /var/qmail/control/rules.smtpd.txt
-echo ':allow,GREETDELAY="0",RBLSMTPD="",QMAILQUEUE="/var/qmail/bin/qmail-scanner-queue.pl"' >> /var/qmail/control/rules.smtpd.txt
+#sed -i '/:deny/d' /var/qmail/control/rules.smtpd.txt
+#echo ':allow,GREETDELAY="0",RBLSMTPD="",QMAILQUEUE="/var/qmail/bin/qmail-scanner-queue.pl"' >> /var/qmail/control/rules.smtpd.txt
 
 echo ./Maildir > /var/qmail/control/defaultdelivery
 echo 255 > /var/qmail/control/concurrencyremote

@@ -19,6 +19,9 @@ rm -f /usr/sbin/sendmail
 ln -s /var/qmail/bin/sendmail /usr/lib/sendmail
 ln -s /var/qmail/bin/sendmail /usr/sbin/sendmail
 
+mv /var/qmail/control /var/qmail/control.tmp
+
+
 # cp $SSL_KEYFILE /var/qmail/ssl/
 # SSLFILE=`basename $SSL_KEYFILE`
 # chown vpopmail.vchkpw /var/qmail/ssl/$SSLFILE

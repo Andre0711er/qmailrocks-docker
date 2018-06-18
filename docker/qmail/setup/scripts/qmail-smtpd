@@ -86,7 +86,7 @@ MAX=30
 #
 # options for programs which run before qmail-smtpd
 
-RBLSMTPD_PROG="`which rblsmtpd`"
+RBLSMTPD_PROG="/usr/local/bin/rblsmtpd"
 #RBL_GOOD=""
 #RBL_BAD="zen.spamhaus.org bl.spamcop.net"
 #RBL_BAD="dnsbl.inps.de ix.dnsbl.manitu.net zen.spamhaus.org"
@@ -193,7 +193,7 @@ SPF_BLOCK_PLUS_ALL=1
 # if you are using qmail-scanner, un-comment ONE of these lines.
 
 #QMAILQUEUE="$VQ/bin/qmail-scanner-queue"
-QMAILQUEUE="$VQ/bin/qmail-scanner-queue.pl"
+# QMAILQUEUE="$VQ/bin/qmail-scanner-queue.pl"
 
 # if you're using some other qmail-queue replacement, add your own line here
 # with the correct value.
@@ -230,7 +230,7 @@ if [ ! -f $VQ/control/rcpthosts ]; then
   chmod 644 $VQ/control/rcpthosts
 fi
 
-SCMD="sslserver"
+SCMD="/usr/local/bin/sslserver"
 
 if [ "$SSL" = "1" ]; then
   if ! hash sslserver 2>/dev/null; then
@@ -334,7 +334,7 @@ then
 
   if [ -n "$RBLCMD" ]
   then
-    RBLCMD="$RBLSMTPD_PROG -t0 $RBLCMD"
+    RBLCMD="$RBLSMTPD_PROG -b -t0 $RBLCMD"
   fi
 fi
 

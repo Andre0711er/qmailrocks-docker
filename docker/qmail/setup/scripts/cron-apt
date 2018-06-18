@@ -40,31 +40,31 @@ PATH=/usr/local/bin:/bin:/usr/bin:/var/qmail/bin
 cd /var/qmail/users
 if [ -f assign ]
 then
-	if [ assign -nt cdb ]
-	then
-		echo running qmail-newu
-		logger -t cron.qmail running qmail-newu
-		/var/qmail/bin/qmail-newu
-	fi
+  if [ assign -nt cdb ]
+  then
+    echo running qmail-newu
+    logger -t cron.qmail running qmail-newu
+    /var/qmail/bin/qmail-newu
+  fi
 else
-	if [ -f cdb ]
-	then
-		echo deleting cdb, assign does not exist
-		logger -t cron.qmail deleting cdb, assign does not exist
-		rm cdb
-	fi
+  if [ -f cdb ]
+  then
+    echo "deleting cdb, assign does not exist"
+    logger -t cron.qmail deleting cdb, assign does not exist
+    rm cdb
+  fi
 fi
 
 cd /var/qmail/control
 if [ -f morercpthosts ]
 then
-	if [ ! -f morercpthosts.cdb ] \
-		|| [ morercpthosts -nt morercpthosts.cdb ]
-	then
-		echo running qmail-newmrh
-		logger -t cron.qmail running qmail-newmrh
-		/var/qmail/bin/qmail-newmrh
-	fi
+  if [ ! -f morercpthosts.cdb ] \
+    || [ morercpthosts -nt morercpthosts.cdb ]
+  then
+    echo "running qmail-newmrh"
+    logger -t cron.qmail running qmail-newmrh
+    /var/qmail/bin/qmail-newmrh
+  fi
 fi
 
 ###############################################################################
@@ -74,30 +74,30 @@ fi
 
 if [ -f validrcptto.cdb -o -f validrcptto.txt ]
 then
-	umask 022
+  umask 022
 
-	if [ ! -f validrcptto.txt ] ; then touch validrcptto.txt ; fi
+  if [ ! -f validrcptto.txt ] ; then touch validrcptto.txt ; fi
 
-	mkvalidrcptto > validrcptto.new
+  mkvalidrcptto > validrcptto.new
 
-# if you don't want to see what changed
-#	if ! diff validrcptto.txt validrcptto.new > /dev/null 2>&1
-#
-# i prefer to see the changes myself
-	if ! diff validrcptto.txt validrcptto.new
-	then
-		echo Building new validrcptto.cdb
-		logger -t cron.qmail building new validrcptto.cdb
-		cdbmake-12 validrcptto.cdb validrcptto.tmp < validrcptto.new
-		chmod 644 validrcptto.cdb validrcptto.new
+  # if you don't want to see what changed
+  #	if ! diff validrcptto.txt validrcptto.new > /dev/null 2>&1
+  #
+  # i prefer to see the changes myself
+  if ! diff validrcptto.txt validrcptto.new
+  then
+    echo "Building new validrcptto.cdb"
+    logger -t cron.qmail building new validrcptto.cdb
+    cdbmake-12 validrcptto.cdb validrcptto.tmp < validrcptto.new
+    chmod 644 validrcptto.cdb validrcptto.new
 
-		# if you are sending the data to other machines,
-		# add the appropriate commands here. the file
-		# "validrcptto.new" contains the now-current list
-		# of email addresses.
-	fi
+    # if you are sending the data to other machines,
+    # add the appropriate commands here. the file
+    # "validrcptto.new" contains the now-current list
+    # of email addresses.
+  fi
 
-	mv -f validrcptto.new validrcptto.txt
+  mv -f validrcptto.new validrcptto.txt
 fi
 
 ###############################################################################
@@ -109,30 +109,30 @@ RESTART=no
 
 if [ -f virtualdomains ]
 then
-	if [ ! -f virtualdomains.last ] \
-		|| [ virtualdomains -nt virtualdomains.last ]
-	then
-		echo virtualdomains has changed
-		logger -t cron.qmail virtualdomains has changed
-		touch virtualdomains.last
-		RESTART=yes
-	fi
+  if [ ! -f virtualdomains.last ] \
+    || [ virtualdomains -nt virtualdomains.last ]
+  then
+    echo "virtualdomains has changed"
+    logger -t cron.qmail virtualdomains has changed
+    touch virtualdomains.last
+    RESTART=yes
+  fi
 fi
 
 if [ -f locals ]
 then
-	if [ ! -f locals.last ] \
-		|| [ locals -nt locals.last ]
-	then
-		echo locals has changed
-		logger -t cron.qmail locals has changed
-		touch locals.last
-		RESTART=yes
-	fi
+  if [ ! -f locals.last ] \
+    || [ locals -nt locals.last ]
+  then
+    echo "locals has changed"
+    logger -t cron.qmail locals has changed
+    touch locals.last
+    RESTART=yes
+  fi
 fi
 
 if [ "$RESTART" == "yes" ]
 then
-	echo Restarting qmail-send
-	killall -HUP qmail-send
+  echo Restarting qmail-send
+  killall -HUP qmail-send
 fi

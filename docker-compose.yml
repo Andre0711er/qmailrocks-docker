@@ -28,7 +28,7 @@ services:
       - "933:993"
     volumes:
       - ./resources/qmail/vpopmail:/home/vpopmail/domains
-      # - ./resources/qmail/control:/var/qmail/control
+      - ./resources/qmail/control:/var/qmail/control
       - ./resources/qmail/users:/var/qmail/users
     # volumes:
     #   - ./setup:/app/setup
