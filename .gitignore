@@ -1,1 +1,4 @@
-resources/
+docker/mariadb/resources
+!docker/mariadb/resources/.gitkeep
+docker/qmail/resources
+!docker/qmail/resources/.gitkeep

@@ -2,18 +2,21 @@ version:         '3.1'
 
 services:
   mariadb:
-    build:       docker/mariadb
+    build:       docker/mariadb/conf
     restart:     unless-stopped
     volumes:
-      - ./resources/mariadb/resources:/database
-      - ./resources/mariadb/mysql:/var/lib/mysql
+      - ./docker/mariadb/resources/resources:/database
+      - ./docker/mariadb/resources/mysql:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=S5QHUhoQxV9lrybs8DpIUbpJV2kgrq1I
       - MYSQL_DATABASE=vpopmail
       - MYSQL_USER=vpopmailuser
       - MYSQL_PASSWORD=1NAihbRqH4b81oIroHdIGvW6o75LL48P
+  spamassassin:
+    build:       docker/spamassassin/conf
+    restart:     unless-stopped
   qmail:
-    build:       docker/qmail
+    build:       docker/qmail/conf
     restart:     unless-stopped
     environment:
       - MYSQL_HOSTNAME=mariadb
@@ -27,9 +30,9 @@ services:
       - "143:143"
       - "933:993"
     volumes:
-      - ./resources/qmail/vpopmail:/home/vpopmail/domains
-      - ./resources/qmail/control:/var/qmail/control
-      - ./resources/qmail/users:/var/qmail/users
+      - ./docker/qmail/resources/vpopmail:/home/vpopmail/domains
+      - ./docker/qmail/resources/control:/var/qmail/control
+      - ./docker/qmail/resources/users:/var/qmail/users
     # volumes:
     #   - ./setup:/app/setup
     #   - ./setup/install:/app/setup/install
