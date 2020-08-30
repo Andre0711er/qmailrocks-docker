@@ -20,7 +20,7 @@ RUN \
   chmod 600 /var/lib/spamassassin/.pyzor/servers && \
   chown -R debian-spamd:debian-spamd /var/lib/spamassassin/.pyzor
 
-#RUN sed -i 's/^logfile = .*$/logfile = \/dev\/stderr/g' /etc/razor/razor-agent.conf
+RUN sed -i 's/^logfile = .*$/logfile = \/dev\/stderr/g' /etc/razor/razor-agent.conf
 
 COPY spamd.sh /
 

@@ -15,6 +15,9 @@ services:
   spamassassin:
     build:       docker/spamassassin/conf
     restart:     unless-stopped
+  clamav:
+    build:       docker/clamav/conf
+    restart:     unless-stopped
   qmail:
     build:       docker/qmail/conf
     restart:     unless-stopped
